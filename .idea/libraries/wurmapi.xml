@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="wurmapi">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../WurmModServerApi/classes/artifacts/wurmapi/wurmapi.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
