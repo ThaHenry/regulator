@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="regulator:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/regulator_jar</output-path>
+    <root id="archive" name="regulator.jar">
+      <element id="module-output" name="regulator" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../WurmModServerApi/classes/artifacts/wurmapi/wurmapi.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../WurmModServerApi/lib/common-1.4.0.1.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

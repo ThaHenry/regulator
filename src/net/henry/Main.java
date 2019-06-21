@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-import com.wurmonline.mesh.GrassData;
 import com.wurmonline.mesh.Tiles;
 import com.wurmonline.wurmapi.api.WurmAPI;
 
@@ -23,7 +22,7 @@ public class Main {
             }
         }
         if(args.length != 2){
-            System.out.println("Invalid argument count. Please specify the path to your map.");
+            System.out.println("Invalid argument count. Please specify the path to your map and config.");
             return;
         }
         Properties prop = new Properties();
@@ -36,7 +35,7 @@ public class Main {
             prop.load(is);
         } catch (IOException ex) {
         }
-        double percent = 0;
+        double percent;
         percent = Double.parseDouble((String) prop.get("percentage"));
         if(percent < 0 || percent > 1){
             System.out.println("Percent value needs to be between 0 and 1");
@@ -50,9 +49,11 @@ public class Main {
         if(stuffToReplace.isEmpty()){
             System.out.println("Nothing is configured to be replaced. Please specify in the config");
         }
+        Integer replacementId = Integer.valueOf((String) prop.get("replacement_id"));
         System.out.println("Config loaded");
         System.out.println("Percentage: "+percent);
         System.out.println("Ids to replace"+stuffToReplace);
+        System.out.println("Tiles will be replaced by: "+replacementId);
         try {
             Random rand = new Random(System.currentTimeMillis());
             WurmAPI api = WurmAPI.open(directory);
@@ -63,17 +64,17 @@ public class Main {
             System.out.println("Map Loaded..");
 
             int replaced = 0;
-            for (int x = 0; x < api.getMapData().getWidth(); x++)
+            for (int x = 0; x < api.getMapData().getWidth(); x++) {
                 for (int y = 0; y < api.getMapData().getHeight(); y++) {
-                    Tiles.Tile t = api.getMapData().getSurfaceTile(x,y);
-                    if(stuffToReplace.contains((t.getIntId())) && rand.nextDouble() < percent){
-                        api.getMapData().setGrass(x,y, GrassData.GrowthStage.SHORT, GrassData.FlowerType.NONE);
+                    if (stuffToReplace.contains((api.getMapData().getSurfaceTile(x, y).getIntId())) && rand.nextDouble() < percent) {
+                        api.getMapData().setSurfaceTile(x, y, Tiles.getTile(replacementId));
                         replaced++;
                     }
                 }
-            api.getMapData().saveChanges();
+            }
+            api.getMapData().saveChanges(true);
 
-            System.out.println(replaced + " tiles were replaced by grass.");
+            System.out.println(replaced + " tiles were replaced by "+replacementId);
         } catch (IOException e) {
             e.printStackTrace();
         }
