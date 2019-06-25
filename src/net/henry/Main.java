@@ -5,12 +5,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-import com.wurmonline.mesh.Tiles;
+import com.wurmonline.mesh.*;
 import com.wurmonline.wurmapi.api.WurmAPI;
 
 public class Main {
 
     public static void main(String[] args) {
+        System.out.println("Starting Tile Regulator v1.2");
         String directory = ".";
         String configPath = ".";
         for (String arg : args){
@@ -40,20 +41,28 @@ public class Main {
         if(percent < 0 || percent > 1){
             System.out.println("Percent value needs to be between 0 and 1");
         }
-        String replaceConfig = (String) prop.get("ids_to_replace");
-        List<String> configStuff = Arrays.asList(replaceConfig.split(","));
+        String sourceConfig = (String) prop.get("source_ids");
+        List<String> sourceIds = Arrays.asList(sourceConfig.split(","));
         List<Integer> stuffToReplace = new ArrayList<>();
-        for(String s : configStuff){
+        for(String s : sourceIds){
             stuffToReplace.add(Integer.valueOf(s));
         }
         if(stuffToReplace.isEmpty()){
             System.out.println("Nothing is configured to be replaced. Please specify in the config");
         }
-        Integer replacementId = Integer.valueOf((String) prop.get("replacement_id"));
+        String targetConfig = (String) prop.get("target_ids");
+        List<String> targetIds = Arrays.asList(targetConfig.split(","));
+        List<Integer> stuffToPut = new ArrayList<>();
+        for(String s : targetIds){
+            stuffToPut.add(Integer.valueOf(s));
+        }
+        if(stuffToPut.isEmpty()){
+            System.out.println("Nothing is configured to be used as replacement. Please specify in the config");
+        }
         System.out.println("Config loaded");
-        System.out.println("Percentage: "+percent);
-        System.out.println("Ids to replace"+stuffToReplace);
-        System.out.println("Tiles will be replaced by: "+replacementId);
+        System.out.println("Percentage: "+percent*100+" %");
+        System.out.println("Tiles to replace: "+stuffToReplace);
+        System.out.println("Tiles will be replaced by: "+stuffToPut);
         try {
             Random rand = new Random(System.currentTimeMillis());
             WurmAPI api = WurmAPI.open(directory);
@@ -67,14 +76,28 @@ public class Main {
             for (int x = 0; x < api.getMapData().getWidth(); x++) {
                 for (int y = 0; y < api.getMapData().getHeight(); y++) {
                     if (stuffToReplace.contains((api.getMapData().getSurfaceTile(x, y).getIntId())) && rand.nextDouble() < percent) {
-                        api.getMapData().setSurfaceTile(x, y, Tiles.getTile(replacementId));
+                        int id;
+                        if(stuffToPut.size() == 1){
+                            id = stuffToPut.get(0);
+                        } else{
+                            id = stuffToPut.get(rand.nextInt(stuffToPut.size()-1));
+                        }
+                        Tiles.Tile t = Tiles.getTile(id);
+                        if(t.isBush()){
+                            api.getMapData().setBush(x,y, BushData.BushType.fromTileData(id), FoliageAge.fromByte((byte) rand.nextInt(7)), GrassData.GrowthTreeStage.decodeTileData(id));
+                        } else if (t.isTree()){
+                            api.getMapData().setTree(x,y, TreeData.TreeType.fromTileData(id), FoliageAge.fromByte((byte) rand.nextInt(7)), GrassData.GrowthTreeStage.decodeTileData(id));
+                        }
+                        else{
+                            api.getMapData().setSurfaceTile(x, y, Tiles.getTile(id));
+                        }
                         replaced++;
                     }
                 }
             }
             api.getMapData().saveChanges(true);
 
-            System.out.println(replaced + " tiles were replaced by "+replacementId);
+            System.out.println(replaced + " tiles were replaced by "+stuffToPut);
         } catch (IOException e) {
             e.printStackTrace();
         }
